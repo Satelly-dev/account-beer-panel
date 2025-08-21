@@ -6,7 +6,10 @@ public class Transaction {
     private Integer id;
     private double total;
     private Integer amount;
+    private double unitPrice;
+    private Integer stockAmount;
     private Timestamp createdAt;
+    private Integer productId;
     private Integer accountId;
 
     public Transaction() {}
@@ -15,25 +18,20 @@ public class Transaction {
         this.id = id;
     }
 
-    public Transaction(double total, int amount, int accountId) {
+    public Transaction(double total, int amount, double unitPrice, int stockAmount, int accountId, int productId) {
         this.total = total;
         this.amount = amount;
+        this.unitPrice = unitPrice;
+        this.stockAmount = stockAmount;
+        this.productId = productId;
         this.accountId = accountId;
     }
 
-    // Getters y Setters
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public Transaction(int id, double total, int amount, double unitPrice, int stockAmount, int accountId, int productId) {
+        this(total, amount, unitPrice, stockAmount, accountId, productId);
+        this.id = id;
+    }
 
-    public double getTotal() { return total; }
-    public void setTotal(double total) { this.total = total; }
 
-    public Integer getAmount() { return amount; }
-    public void setAmount(Integer amount) { this.amount = amount; }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
-
-    public Integer getAccountId() { return accountId; }
-    public void setAccountId(Integer accountId) { this.accountId = accountId; }
 }

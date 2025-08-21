@@ -1,8 +1,7 @@
-package services;
+package services.account;
 
 import static database.DBConnection.getConnection;
 
-import com.mysql.cj.xdevapi.PreparableStatement;
 import domains.Account;
 
 import java.sql.Connection;
@@ -167,11 +166,50 @@ public class AccountDAO implements IAccountDAO {
 
     @Override
     public void update(Account account) {
+        String sql = "UPDATE account SET name = ?, phone = ?, verified = ? WHERE id = ?";
 
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, account.getName());
+            ps.setString(2, account.getPhone());
+            ps.setBoolean(3, account.getVerified());
+            ps.setInt(4, account.getId());
+
+            int rowsUpdated = ps.executeUpdate();
+
+            if (rowsUpdated > 0) {
+                System.out.println("✅ Cuenta actualizada correctamente.");
+            } else {
+                System.out.println("⚠️ No se encontró la cuenta con ID: " + account.getId());
+            }
+
+        } catch (Exception e) {
+            System.out.println("`❌ La cuenta no se actualizo.\s" + e.getMessage());
+        }
     }
+
 
     @Override
     public void delete(int id) {
+        String sql = "DELETE FROM account WHERE id = ?";
 
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("✅ Cuenta eliminada correctamente (ID: " + id + ")\n");
+            } else {
+                System.out.println("⚠️ No se encontró ninguna cuenta con el ID: " + id + "\n");
+            }
+
+        } catch (Exception e) {
+            System.out.println("❌ Error al eliminar la cuenta: " + e.getMessage());
+            e.getStackTrace();
+        }
     }
+
 }
