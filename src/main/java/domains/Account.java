@@ -32,16 +32,6 @@ public class Account {
         this.phone = phone;
     }
 
-    public Account(Integer id, String name, String phone, Integer points, Boolean verified, Date createdAt, int transactions, int stockAmount) {
-        this(name, phone);
-        this.id = id;
-        this.points = points;
-        this.verified = verified;
-        this.createdAt = createdAt;
-        this.transactions = transactions;
-        this.stockAmount = stockAmount;
-    }
-
     public Integer getId() {
         return id;
     }
@@ -82,23 +72,16 @@ public class Account {
         this.verified = verified;
     }
 
-    public Date getCreatedAt() {
-        return createdAt;
-    }
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
 
-    public int getTransactions() {
-        return transactions;
-    }
 
     public void setTransactions(int transactions) {
         this.transactions = transactions;
     }
 
-    public int getStockAmount() {return stockAmount; }
 
     public void setStockAmount(int stockAmount) {this.stockAmount = stockAmount; }
 
