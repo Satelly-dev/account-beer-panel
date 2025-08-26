@@ -13,32 +13,39 @@ import java.util.List;
 public class AccountDAO implements IAccountDAO {
     @Override
     public Account findById(int id) {
-        PreparedStatement ps;
-        ResultSet rs;
-        Connection con = getConnection();
-        var sql = "SELECT * FROM account WHERE id = ?";
-        try {
-            Account account = new Account(id);
-            ps = con.prepareStatement(sql);
+        String sql = "SELECT a.id, a.name, a.phone, a.points, a.verified, a.created_at, " +
+                "COUNT(t.id) AS transaction_count, " +
+                "COALESCE(SUM(t.stock_amount), 0) AS total_stock " +
+                "FROM account a " +
+                "LEFT JOIN transaction t ON t.account_id = a.id " +
+                "AND t.created_at >= NOW() - INTERVAL 1 DAY " +
+                "WHERE a.id = ? " +
+                "GROUP BY a.id, a.name, a.phone, a.points, a.verified, a.created_at";
+
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
             ps.setInt(1, id);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                account.setName(rs.getString("name"));
-                account.setPhone(rs.getString("phone"));
-                account.setPoints(rs.getInt("points"));
-                account.setVerified(rs.getBoolean("verified"));
-                account.setCreatedAt(rs.getDate("created_at"));
-                return account;
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Account account = new Account();
+                    account.setId(rs.getInt("id"));
+                    account.setName(rs.getString("name"));
+                    account.setPhone(rs.getString("phone"));
+                    account.setPoints(rs.getInt("points"));
+                    account.setVerified(rs.getBoolean("verified"));
+                    account.setCreatedAt(rs.getDate("created_at"));
+
+                    account.setTransactions(rs.getInt("transaction_count"));
+                    account.setStockAmount(rs.getInt("total_stock"));
+
+                    return account;
+                }
             }
         } catch (Exception e) {
-            System.out.println("❌ Error al recuperar cliente por id\s" + e.getMessage());
-            e.getStackTrace();
-        } finally {
-            try {
-                con.close();
-            } catch (Exception e) {
-                System.out.println("❌ Error al cerrar la conexion");
-            }
+            System.out.println("❌ Error al recuperar cliente por id: " + e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
@@ -46,7 +53,14 @@ public class AccountDAO implements IAccountDAO {
     @Override
     public List<Account> findByName(String name) {
         List<Account> accounts = new ArrayList<>();
-        String sql = "SELECT * FROM account WHERE name LIKE ?";
+        String sql = "SELECT a.id, a.name, a.phone, a.points, a.verified, a.created_at, " +
+                "COUNT(t.id) AS transaction_count, " +
+                "COALESCE(SUM(t.stock_amount), 0) AS total_stock " +
+                "FROM account a " +
+                "LEFT JOIN transaction t ON t.account_id = a.id " +
+                "AND t.created_at >= NOW() - INTERVAL 1 DAY " +
+                "WHERE a.name LIKE ? " +
+                "GROUP BY a.id, a.name, a.phone, a.points, a.verified, a.created_at";
 
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -62,6 +76,10 @@ public class AccountDAO implements IAccountDAO {
                     account.setPoints(rs.getInt("points"));
                     account.setVerified(rs.getBoolean("verified"));
                     account.setCreatedAt(rs.getDate("created_at"));
+
+                    account.setTransactions(rs.getInt("transaction_count"));
+                    account.setStockAmount(rs.getInt("total_stock"));
+
                     accounts.add(account);
                 }
             }
@@ -69,40 +87,44 @@ public class AccountDAO implements IAccountDAO {
             System.out.println("❌ Error al realizar la búsqueda: " + e.getMessage());
             e.printStackTrace();
         }
-
         return accounts;
     }
 
-
     @Override
     public Account findByPhone(String phone) {
-        PreparedStatement ps;
-        ResultSet rs;
-        Connection con = getConnection();
-        var sql = "SELECT * FROM account WHERE phone = ?";
-        try {
-            Account account = new Account();
-            ps = con.prepareStatement(sql);
+        String sql = "SELECT a.id, a.name, a.phone, a.points, a.verified, a.created_at, " +
+                "COUNT(t.id) AS transaction_count, " +
+                "COALESCE(SUM(t.stock_amount), 0) AS total_stock " +
+                "FROM account a " +
+                "LEFT JOIN transaction t ON t.account_id = a.id " +
+                "AND t.created_at >= NOW() - INTERVAL 1 DAY " +
+                "WHERE a.phone = ? " +
+                "GROUP BY a.id, a.name, a.phone, a.points, a.verified, a.created_at";
+
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
             ps.setString(1, phone);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                account.setId(rs.getInt("id"));
-                account.setName(rs.getString("name"));
-                account.setPhone(rs.getString("phone"));
-                account.setPoints(rs.getInt("points"));
-                account.setVerified(rs.getBoolean("verified"));
-                account.setCreatedAt(rs.getDate("created_at"));
-                return account;
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Account account = new Account();
+                    account.setId(rs.getInt("id"));
+                    account.setName(rs.getString("name"));
+                    account.setPhone(rs.getString("phone"));
+                    account.setPoints(rs.getInt("points"));
+                    account.setVerified(rs.getBoolean("verified"));
+                    account.setCreatedAt(rs.getDate("created_at"));
+
+                    account.setTransactions(rs.getInt("transaction_count"));
+                    account.setStockAmount(rs.getInt("total_stock"));
+
+                    return account;
+                }
             }
         } catch (Exception e) {
-            System.out.println("❌ Error al recuperar cliente por id\s" + e.getMessage());
-            e.getStackTrace();
-        } finally {
-            try {
-                con.close();
-            } catch (Exception e) {
-                System.out.println("❌ Error al cerrar la conexion");
-            }
+            System.out.println("❌ Error al recuperar cliente por phone: " + e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
@@ -110,13 +132,19 @@ public class AccountDAO implements IAccountDAO {
     @Override
     public List<Account> findAll() {
         List<Account> accounts = new ArrayList<>();
-        PreparedStatement ps;
-        ResultSet rs;
         Connection con = getConnection();
-        var sql = "SELECT * FROM account ORDER BY id";
-        try {
-            ps = con.prepareCall(sql);
-            rs = ps.executeQuery();
+        String sql = "SELECT " +
+                "a.id, a.name, a.phone, a.points, a.verified, a.created_at, " +
+                "COUNT(t.id) AS transaction_count, " +
+                "COALESCE(SUM(t.stock_amount), 0) AS total_stock " +
+                "FROM account a " +
+                "LEFT JOIN transaction t ON t.account_id = a.id " +
+                "AND t.created_at >= NOW() - INTERVAL 1 DAY " +
+                "GROUP BY a.id, a.name, a.phone, a.points, a.verified, a.created_at " +
+                "ORDER BY a.id";
+        try (PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
                 Account account = new Account();
                 account.setId(rs.getInt("id"));
@@ -125,20 +153,22 @@ public class AccountDAO implements IAccountDAO {
                 account.setPoints(rs.getInt("points"));
                 account.setVerified(rs.getBoolean("verified"));
                 account.setCreatedAt(rs.getDate("created_at"));
+
+                account.setTransactions(rs.getInt("transaction_count"));  // cantidad de transacciones
+                account.setStockAmount(rs.getInt("total_stock"));        // suma total de stockAmount
+
                 accounts.add(account);
             }
         } catch (Exception e) {
             System.out.println("❌ Error al listar las cuentas: " + e.getMessage());
-            e.getStackTrace();
+            e.printStackTrace();
         } finally {
-            try {
-                con.close();
-            } catch (Exception e) {
-                System.out.println("❌ Error al cerrar la conexion");
-            }
+            try { con.close(); }
+            catch (Exception e) { System.out.println("❌ Error al cerrar la conexion"); }
         }
         return accounts;
     }
+
 
     @Override
     public void save(Account account) {
@@ -166,15 +196,16 @@ public class AccountDAO implements IAccountDAO {
 
     @Override
     public void update(Account account) {
-        String sql = "UPDATE account SET name = ?, phone = ?, verified = ? WHERE id = ?";
+        String sql = "UPDATE account SET name = ?, phone = ?, points = ?, verified = ? WHERE id = ?";
 
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, account.getName());
             ps.setString(2, account.getPhone());
-            ps.setBoolean(3, account.getVerified());
-            ps.setInt(4, account.getId());
+            ps.setInt(3, account.getPoints());
+            ps.setBoolean(4, account.getVerified());
+            ps.setInt(5, account.getId());
 
             int rowsUpdated = ps.executeUpdate();
 
@@ -188,7 +219,6 @@ public class AccountDAO implements IAccountDAO {
             System.out.println("`❌ La cuenta no se actualizo.\s" + e.getMessage());
         }
     }
-
 
     @Override
     public void delete(int id) {

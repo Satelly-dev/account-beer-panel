@@ -11,7 +11,14 @@ public class Account {
     private Integer points;
     private Boolean verified;
     private Date createdAt;
-    private List<Transaction> transactions;
+    private Integer transactions;
+    private Integer stockAmount;
+
+    public static final String RESET = "\u001B[0m";
+    public static final String RED = "\u001B[31m";
+    public static final String GREEN = "\u001B[32m";
+    public static final String YELLOW = "\u001B[33m";
+
 
     // Constructores
     public Account() {}
@@ -25,12 +32,14 @@ public class Account {
         this.phone = phone;
     }
 
-    public Account(Integer id, String name, String phone, Integer points, Boolean verified, Date createdAt) {
+    public Account(Integer id, String name, String phone, Integer points, Boolean verified, Date createdAt, int transactions, int stockAmount) {
         this(name, phone);
         this.id = id;
         this.points = points;
         this.verified = verified;
         this.createdAt = createdAt;
+        this.transactions = transactions;
+        this.stockAmount = stockAmount;
     }
 
     public Integer getId() {
@@ -81,35 +90,49 @@ public class Account {
         this.createdAt = createdAt;
     }
 
-    public List<Transaction> getTransactions() {
+    public int getTransactions() {
         return transactions;
     }
 
-    public void setTransactions(List<Transaction> transactions) {
+    public void setTransactions(int transactions) {
         this.transactions = transactions;
     }
 
+    public int getStockAmount() {return stockAmount; }
+
+    public void setStockAmount(int stockAmount) {this.stockAmount = stockAmount; }
+
     public static String header() {
         return String.format(
-                "| %-5s | %-10s | %-10s | %-8s | %-8s | %-12s | %-12s |",
-                "ID", "NAME", "PHONE", "POINTS", "VERIFIED", "CREATED_AT", "TRANSACTIONS"
+                "| %-4s | %-10s | %-10s | %-8s | %-8s | %-10s | %-14s | %-14s | %-9s",
+                "ID", "NAME", "PHONE", "POINTS", "VERIFIED", "CREATED_AT", "TRANS ON 24HRS", "AMOUNT ON 24HRS", "RISK"
         );
     }
 
 
+
     @Override
     public String toString() {
+        boolean riesgo = (transactions > 4 && stockAmount > 50);
+
+        String riskLabel = riesgo
+                ? RED + "⚠️ RIESGO" + RESET
+                : GREEN + "OK" + RESET;
+
         return String.format(
-                "| %-5s | %-10s | %-10s | %-8s | %-8s | %-12s | %-12s |",
+                "| %-4s | %-10s | %-10s | %-8s | %-8s | %-10s | %-14s | %-15s | %-9s",
                 id,
                 name,
                 phone,
                 points,
                 verified,
                 createdAt,
-                transactions
+                transactions,
+                stockAmount,
+                riskLabel
         );
     }
+
 
 
     @Override
